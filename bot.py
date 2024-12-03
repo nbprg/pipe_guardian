@@ -5,7 +5,7 @@ from rich.prompt import Prompt
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from requests.exceptions import ProxyError, ConnectTimeout, ReadTimeout, RequestException
 os.system('clear')
-print("""
+logo = ("""
 [green]┌─────────────── [white bold]info [/white bold][green]────────────────┐
 [green]│[white italic] Devoloper [/white italic]:[white italic] Saifur Rahman Siam      [/white italic][green]│
 [green]│[white italic] Youtube   [/white italic]:[white italic] Noob Programmer (nbprg) [/italic white][green]│
@@ -44,7 +44,7 @@ def chack_point(token):
 def view_nodes(proxy):
     try:
        response = requests.get('https://pipe-network-backend.pipecanary.workers.dev/api/nodes',proxies=proxy).json()
-       return response['node_id']
+       return response
     except:
       return 'Error Get Nodes '
 def send_hartbeat():
@@ -68,20 +68,37 @@ def get_one_points(proxy,token):
           'authorization': f'Bearer {token}',
           'content-type': 'application/json',
           }
-          try:
-             ip = proxy.split('@')[1].split(':')[0]
-          except:
-             ip = proxy.split(':')[0]
-          json_data = { 'node_id': f"{str(random.choice(['1','2','3','4','5','6','7','8','9','10']))}",
-          'ip': ip, 'latency': int(random.randint(170,1243)),
-          'status': 'online',
-          }
-          response = requests.post('https://pipe-network-backend.pipecanary.workers.dev/api/test',headers=headers,json=json_data,proxies=proxyx,timeout=5).json()
-          point+=int(response['points'])
+          xd = view_nodes(proxy=proxyx)
+          for nods in xd:
+             start_time = time.time()
+             node_url = f"http://{nods['ip']}"
+             response = requests.get(node_url)
+             end_time = time.time()
+             latency = (end_time - start_time) * 1000
+             json_data = {'node_id': nods['node_id'],
+             'ip': nods['ip'], 'latency': int(latency),
+             'status': 'online',
+             }
+             response = requests.post('https://pipe-network-backend.pipecanary.workers.dev/api/test',headers=headers,json=json_data,proxies=proxyx,timeout=5).json()
+             point+=int(response['points'])
     except Exception as e:
           sys.stdout.write(f'\r\033[0m   └───\033[0;31m Request Point Error ');sys.stdout.flush()
 try:proxy_list=open('proxy.txt','r').read().splitlines()
 except:print('[red]proxy file not found')
+pxl,webshare=[],False
+if 'https://proxy.webshare.io/api/v2/proxy/list/download' in str(proxy_list):
+   for url in proxy_list:
+      proxy_list = requests.get(url).text.splitlines()
+      try:
+         for item in proxy_list:
+            get_item = item.split(':')
+            user,pas,ip,port = get_item[2], get_item[3], get_item[0], get_item[1]
+            proxys = f"http://{user}:{pas}@{ip}:{port}"
+            pxl.append(proxys)
+            webshare=True
+      except Exception as e:print(str(e))
+if webshare:
+    proxy_list=pxl
 """
 http,socks4,socks5 = 0,0,0
 for item in proxy_list:
@@ -94,6 +111,7 @@ print(f'   └───[green italic] Total http Proxy   [/green italic]:',http)
 print(f'   └───[green italic] Total socks4 Proxy [/green italic]:',socks4)
 print(f'   └───[green italic] Total socks5 Proxy [/green italic]:',socks5);print('')
 """
+print(logo)
 token = login_pipe()
 print('');print(f'[italic white] Accaunt Tatal Balance Now : {chack_point(token)}[resset all]')
 def main(proxy_list,token):
